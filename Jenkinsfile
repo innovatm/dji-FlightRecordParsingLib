@@ -150,13 +150,13 @@ pipeline {
                             }
                             post {
                                 success {
-                                    slackSend channel: "$SLACK_CHANNEL", color: "good", message: "DJI Flightlog Decoder is successfully deployed on DroneKeeper\|${env.DEPLOY_ENV} (<${env.RUN_DISPLAY_URL}|logs>)"
+                                    slackSend channel: "$SLACK_CHANNEL", color: "good", message: "DJI Flightlog Decoder is successfully deployed on DroneKeeper/|${env.DEPLOY_ENV} (<${env.RUN_DISPLAY_URL}|logs>)"
                                 }
                                 unstable {
-                                    slackSend channel: "$SLACK_CHANNEL", color: "warning", message: "DJI Flightlog Decoder is successfully deployed on DroneKeeper\|${env.DEPLOY_ENV} (<${env.RUN_DISPLAY_URL}|logs>)"
+                                    slackSend channel: "$SLACK_CHANNEL", color: "warning", message: "DJI Flightlog Decoder is successfully deployed on DroneKeeper/|${env.DEPLOY_ENV} (<${env.RUN_DISPLAY_URL}|logs>)"
                                 }
                                 failure {
-                                    slackSend channel: "$SLACK_CHANNEL", color: "danger", message: "ERROR: DJI Flightlog Decoder failed to deploy on DroneKeeper\|${env.DEPLOY_ENV} (<${env.RUN_DISPLAY_URL}|logs>)"
+                                    slackSend channel: "$SLACK_CHANNEL", color: "danger", message: "ERROR: DJI Flightlog Decoder failed to deploy on DroneKeeper/|${env.DEPLOY_ENV} (<${env.RUN_DISPLAY_URL}|logs>)"
                                 }
                             }
                         }
