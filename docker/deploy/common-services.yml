@@ -1,0 +1,15 @@
+services:
+  # Flightlog decoder
+  flightlog-decoder:
+    image: ${DOCKER_REGISTRY}dji-flightlog-decoder${DOCKER_TAG}
+    volumes:
+      - /opt/dji/flightlog-decoder/data:/opt/dji/flightlog-decoder/data
+    env_file:
+      - /opt/dji/flightlog-decoder/.env
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8080"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 600s
+    restart: always

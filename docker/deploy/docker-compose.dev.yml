@@ -1,0 +1,9 @@
+services:
+  flightlog-decoder:
+    extends:
+      file: common-services.yml
+      service: flightlog-decoder
+
+networks:
+  webgateway:
+    external: true
