@@ -24,10 +24,6 @@ pipeline {
                     environment name : 'TAG_NAME', value : 'dev'
                     environment name : 'TAG_NAME', value : 'prod'
                     environment name : 'TAG_NAME', value : 'staging'
-                    environment name : 'TAG_NAME', value : 'rwanda-dev'
-                    environment name : 'TAG_NAME', value : 'rwanda-prod'
-                    environment name : 'TAG_NAME', value : 'rwanda-staging'
-                    environment name : 'TAG_NAME', value : 'thailand-prod'
                 }
             }
 
@@ -41,45 +37,23 @@ pipeline {
                         env.DOCKER_RELEASE_TAG = 'dev';
                         env.DEPLOY_ENV= 'dev';
                         env.DEPLOY_SERVER = "62.4.14.218";
+                    } else if ( env.TAG_NAME == 'staging' ) {
+                        env.BUILD_ENV = 'staging';
+                        env.RELEASE_VERSION = 'staging';
+                        env.DOCKER_REPO = "dronekeeper";
+                        env.DEPLOY_SERVER = "51.158.20.112";
                     } else if ( env.TAG_NAME == 'prod' ) {
                         env.VERSION= 'prod';
                         env.DOCKER_TAG = 'prod';
                         env.DOCKER_RELEASE_TAG=sh(returnStdout: true, script: '''
-                            git tag -l --points-at HEAD| grep -v -E 'dev|prod|rwanda-dev|rwanda-staging|rwanda-prod|thailand-prod' | xargs -n2
+                            git tag -l --points-at HEAD| grep -v -E 'dev|prod' | xargs -n2
                         ''');
                         env.DEPLOY_ENV= 'prod';
                         env.DEPLOY_SERVER = "62.210.28.140";
-                    } else if ( env.TAG_NAME == 'rwanda-dev' ) {
-                        env.VERSION= 'rwanda-dev';
-                        env.DOCKER_TAG = 'rwanda-dev';
-                        env.DOCKER_RELEASE_TAG = 'rwanda-dev';
-                        env.DEPLOY_ENV= 'rwanda-dev';
-                        env.DEPLOY_SERVER = "151.80.11.74";
-                    } else if ( env.TAG_NAME == 'rwanda-staging' ) {
-                        env.VERSION= 'rwanda-staging';
-                        env.DOCKER_TAG = 'staging';
-                        env.DOCKER_RELEASE_TAG = 'staging';
-                        env.DOCKER_REPO = 'uspace-rwanda';
-                    } else if ( env.TAG_NAME == 'rwanda-prod' ) {
-                        env.VERSION= 'rwanda-prod';
-                        env.DOCKER_TAG = 'prod';
-                        env.DOCKER_RELEASE_TAG=sh(returnStdout: true, script: '''
-                            git tag -l --points-at HEAD| grep -v -E 'dev|prod|rwanda-dev|rwanda-staging|rwanda-prod|thailand-prod' | xargs -n2
-                        ''')
-                        env.DOCKER_REPO = 'uspace-rwanda';
-                    } else if ( env.TAG_NAME == 'thailand-prod' ) {
-                        env.VERSION= 'thailand-prod';
-                        env.DOCKER_TAG = 'thailand-prod';
-                        env.DOCKER_RELEASE_TAG=sh(returnStdout: true, script: '''
-                            git tag -l --points-at HEAD| grep -v -E 'dev|prod|rwanda-dev|rwanda-staging|rwanda-prod|thailand-prod' | xargs -n2
-                        ''')
-                        env.DEPLOY_ENV= 'thailand-prod';
-                        env.DOCKER_REPO = 'uspace-thailand';
-                        env.DEPLOY_SERVER = "161.246.157.110";
                     }
                     sh '''
                         if [ "$DOCKER_TAG" = "prod" ] && [ ! -n "$DOCKER_RELEASE_TAG" ]; then
-                            echo "Prod (prod or rwanda-prod) tag found without release tag"
+                            echo "Prod (prod) tag found without release tag"
                             echo "You need prod and release tag on same commit to deploy!"
                             exit 1
                         fi
