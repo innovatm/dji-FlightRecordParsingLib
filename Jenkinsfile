@@ -11,6 +11,7 @@ pipeline {
     environment {
         HARBOR_REGISTRY = "harbor.innov-atm.com"
         SLACK_CHANNEL = "#system"
+        DOCKER_REPO = "dji-flighlog-decoder"
     }
     tools {
         jdk 'jdk17'
@@ -26,30 +27,29 @@ pipeline {
                     environment name : 'TAG_NAME', value : 'staging'
                 }
             }
-
             steps {
                 script {
-                    env.DOCKER_REPO = "dji-flighlog-decoder"
                     env.VERSION= 'dev';
                     if ( env.TAG_NAME == 'dev' ) {
-                        env.VERSION= 'dev';
                         env.DOCKER_TAG = 'dev';
                         env.DOCKER_RELEASE_TAG = 'dev';
                         env.DEPLOY_ENV= 'dev';
                         env.DEPLOY_SERVER = "62.4.14.218";
+                        env.DEPLOY_FQDN="dji-fld.dev.dronekeeper.com";
                     } else if ( env.TAG_NAME == 'staging' ) {
-                        env.BUILD_ENV = 'staging';
-                        env.RELEASE_VERSION = 'staging';
-                        env.DOCKER_REPO = "dronekeeper";
+                        env.DOCKER_TAG = 'staging';
+                        env.DOCKER_RELEASE_TAG = 'staging';
+                        env.DEPLOY_ENV= 'staging';
                         env.DEPLOY_SERVER = "51.158.20.112";
+                        env.DEPLOY_FQDN="dji-fld.staging.dronekeeper.com";
                     } else if ( env.TAG_NAME == 'prod' ) {
-                        env.VERSION= 'prod';
                         env.DOCKER_TAG = 'prod';
                         env.DOCKER_RELEASE_TAG=sh(returnStdout: true, script: '''
                             git tag -l --points-at HEAD| grep -v -E 'dev|prod' | xargs -n2
                         ''');
                         env.DEPLOY_ENV= 'prod';
                         env.DEPLOY_SERVER = "62.210.28.140";
+                        env.DEPLOY_FQDN="dji-fld.app.dronekeeper.com";
                     }
                     sh '''
                         if [ "$DOCKER_TAG" = "prod" ] && [ ! -n "$DOCKER_RELEASE_TAG" ]; then
@@ -98,14 +98,14 @@ pipeline {
                                     sh '''
                                         NAME=flightlog-decoder
                                         DOCKER_NAME=dji-$NAME
-                                        docker build . -f docker/build/$NAME/Dockerfile -t $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$BUILD_ENV
-                                        docker push $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$BUILD_ENV
-                                        if [ "$RELEASE_VERSION" != "$BUILD_ENV" ]; then
-                                            docker tag $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$BUILD_ENV $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$RELEASE_VERSION
-                                            docker push $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$RELEASE_VERSION
-                                            docker rmi $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$RELEASE_VERSION
+                                        docker build . -f docker/build/$NAME/Dockerfile -t $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$DOCKER_TAG
+                                        docker push $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$DOCKER_TAG
+                                        if [ "$DOCKER_RELEASE_TAG" != "$DOCKER_TAG" ]; then
+                                            docker tag $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$DOCKER_TAG $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$DOCKER_RELEASE_TAG
+                                            docker push $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$DOCKER_RELEASE_TAG
+                                            docker rmi $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$DOCKER_RELEASE_TAG
                                         fi
-                                        docker rmi $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$BUILD_ENV
+                                        docker rmi $HARBOR_REGISTRY/$DOCKER_REPO/$DOCKER_NAME:$DOCKER_TAG
                                     '''
                                 }
                             }
@@ -124,19 +124,24 @@ pipeline {
                             }
                             post {
                                 success {
-                                    slackSend channel: "$SLACK_CHANNEL", color: "good", message: "DJI Flightlog Decoder is successfully deployed on DroneKeeper/|${env.DEPLOY_ENV} (<${env.RUN_DISPLAY_URL}|logs>)"
+                                    slackSend channel: "$SLACK_CHANNEL", color: "good", message: "DJI Flightlog Decoder is successfully deployed on DroneKeeper ${env.DEPLOY_ENV} (<${env.RUN_DISPLAY_URL}|logs>)"
                                 }
                                 unstable {
-                                    slackSend channel: "$SLACK_CHANNEL", color: "warning", message: "DJI Flightlog Decoder is successfully deployed on DroneKeeper/|${env.DEPLOY_ENV} (<${env.RUN_DISPLAY_URL}|logs>)"
+                                    slackSend channel: "$SLACK_CHANNEL", color: "warning", message: "DJI Flightlog Decoder is successfully deployed on DroneKeeper ${env.DEPLOY_ENV} (<${env.RUN_DISPLAY_URL}|logs>)"
                                 }
                                 failure {
-                                    slackSend channel: "$SLACK_CHANNEL", color: "danger", message: "ERROR: DJI Flightlog Decoder failed to deploy on DroneKeeper/|${env.DEPLOY_ENV} (<${env.RUN_DISPLAY_URL}|logs>)"
+                                    slackSend channel: "$SLACK_CHANNEL", color: "danger", message: "ERROR: DJI Flightlog Decoder failed to deploy on DroneKeeper ${env.DEPLOY_ENV} (<${env.RUN_DISPLAY_URL}|logs>)"
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+    }
+    post {
+        always {
+            deleteDir()
         }
     }
 }
