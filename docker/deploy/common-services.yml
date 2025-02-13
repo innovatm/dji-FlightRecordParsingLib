@@ -12,4 +12,22 @@ services:
       timeout: 3s
       retries: 10
       start_period: 600s
+    networks:
+      - "default"
+      - "webgateway"
+    labels:
+          traefik.docker.network: webgateway
+          traefik.enable: "true"
+          traefik.http.middlewares.dji_decoder_tls_compress.compress: "true"
+          traefik.http.routers.dji_decoder.entryPoints: http
+          traefik.http.routers.dji_decoder.middlewares: https_redirect@file
+          traefik.http.routers.dji_decoder.rule: Host(`${FQDN}`)
+          traefik.http.routers.dji_decoder.service: dji_decoder_tls
+          traefik.http.routers.dji_decoder_tls.entryPoints: https
+          traefik.http.routers.dji_decoder_tls.middlewares: dji_decoder_tls_compress
+          traefik.http.routers.dji_decoder_tls.rule: Host(`${FQDN}`)
+          traefik.http.routers.dji_decoder_tls.service: dji_decoder_tls
+          traefik.http.routers.dji_decoder_tls.tls: "true"
+          traefik.http.routers.dji_decoder_tls.tls.certresolver: default
+          traefik.http.services.dji_decoder_tls.loadbalancer.server.port: "8080"
     restart: always
