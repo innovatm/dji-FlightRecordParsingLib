@@ -1,0 +1,33 @@
+services:
+  # Flightlog decoder
+  flightlog-decoder:
+    image: ${DOCKER_REGISTRY}dji-flightlog-decoder${DOCKER_TAG}
+    volumes:
+      - /opt/dji/flightlog-decoder/data:/opt/dji/flightlog-decoder/data
+    env_file:
+      - /opt/dji/flightlog-decoder/.env
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8080"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 600s
+    networks:
+      - "default"
+      - "webgateway"
+    labels:
+          traefik.docker.network: webgateway
+          traefik.enable: "true"
+          traefik.http.middlewares.dji_decoder_tls_compress.compress: "true"
+          traefik.http.routers.dji_decoder.entryPoints: http
+          traefik.http.routers.dji_decoder.middlewares: https_redirect@file
+          traefik.http.routers.dji_decoder.rule: Host(`${FQDN}`)
+          traefik.http.routers.dji_decoder.service: dji_decoder_tls
+          traefik.http.routers.dji_decoder_tls.entryPoints: https
+          traefik.http.routers.dji_decoder_tls.middlewares: dji_decoder_tls_compress
+          traefik.http.routers.dji_decoder_tls.rule: Host(`${FQDN}`)
+          traefik.http.routers.dji_decoder_tls.service: dji_decoder_tls
+          traefik.http.routers.dji_decoder_tls.tls: "true"
+          traefik.http.routers.dji_decoder_tls.tls.certresolver: default
+          traefik.http.services.dji_decoder_tls.loadbalancer.server.port: "8080"
+    restart: always

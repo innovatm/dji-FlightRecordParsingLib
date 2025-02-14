@@ -48,28 +48,16 @@ target_include_directories(
 add_subdirectory(${all_project_root_path}/dji-flightrecordengine/source EngineBuild)
 target_link_libraries(${current_project_name} FlightRecordEngine)
 
-# Import third party - libcurl/libssl/libcrypto
+# Import third party - libcurl
 add_library(libcurl STATIC IMPORTED)
 set_target_properties( libcurl PROPERTIES
     IMPORTED_LOCATION ${all_project_root_path}/third-party/build/libcurl/lib/${platformLowerStr}/libcurl.a
     INTERFACE_INCLUDE_DIRECTORIES "${all_project_root_path}/third-party/header/libcurl/include"
+    INTERFACE_LINK_LIBRARIES "ZLIB::ZLIB"
 )
 
-add_library(libssl STATIC IMPORTED)
-set_target_properties( libssl PROPERTIES
-    IMPORTED_LOCATION ${all_project_root_path}/third-party/build/libopenssl/lib/${platformLowerStr}/libssl.a
-    INTERFACE_INCLUDE_DIRECTORIES "${all_project_root_path}/third-party/header/libopenssl/include"
-)
-
+find_package(ZLIB)
+find_package(OpenSSL REQUIRED)
 find_package(Threads)
-add_library(libcrypto STATIC IMPORTED)
-set_target_properties( libcrypto PROPERTIES
-    IMPORTED_LOCATION ${all_project_root_path}/third-party/build/libopenssl/lib/${platformLowerStr}/libcrypto.a
-    INTERFACE_INCLUDE_DIRECTORIES "${all_project_root_path}/third-party/header/libopenssl/include"
-    INTERFACE_LINK_LIBRARIES "Threads::Threads"
-)
-set(CURLS libcurl libssl libcrypto dl)
+set(CURLS libcurl OpenSSL::SSL OpenSSL::Crypto Threads::Threads dl)
 target_link_libraries(${current_project_name} ${CURLS})
-
-
-
