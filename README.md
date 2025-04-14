@@ -1,3 +1,27 @@
+# Enhanced INNOV-ATM DJIFlightRecord
+
+Modified flight record parsing library is capable of parsing version 13 flight log files via REST API.
+
+### Running the API service in Docker
+**Build docker image**
+```shell
+./decoder.sh docker build
+```
+**Start docker container**
+```shell
+./decoder.sh docker start <SDK_KEY>
+```
+
+**Stop docker container**
+```shell
+./decoder.sh docker stop
+```
+
+### Uploading a sample flight log
+```shell
+curl -X POST -H "Content-Type: application/octet-stream" --data-binary @path/to/input/file http://localhost:8088/api/decode/{filename} --output output.txt
+```
+
 # DJIFlightRecord
 
 ### <p>[中文版](https://github.com/dji-sdk/FlightRecordParsingLib/blob/master/README_cn.md)</p>

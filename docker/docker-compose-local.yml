@@ -5,13 +5,15 @@ services:
       context: ${PWD}
       dockerfile: ${PWD}/docker/build/flightlog-decoder/Dockerfile
     environment:
-      - SDK_KEY=${DJI_SDK_KEY}
+      - SDK_KEY=${SDK_KEY}
     platform: linux/amd64
     ports:
       - 8088:8080
     networks:
       - default
       - webgateway
+    expose:
+      - "8088"
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 8080"]
       interval: 3s
@@ -21,4 +23,3 @@ services:
 
 networks:
   webgateway:
-    external: true
